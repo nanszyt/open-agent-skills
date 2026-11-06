@@ -733,7 +733,89 @@ class HoseaDeckBuilder:
         return slide
 
     # --------------------------------------------------------------------------
-    # 7. Archetype: case (标杆案例与客户证言)
+    # 7. Archetype: timeline (时间轴里程碑与演进路线)
+    # --------------------------------------------------------------------------
+    def add_timeline_slide(self, title: str, milestones: List[Dict[str, Any]]):
+        slide = self.prs.slides.add_slide(self.layout_content)
+        self._set_slide_title(slide, title)
+        
+        n = max(3, min(4, len(milestones)))
+        total_w = Inches(12.0)
+        gap = Inches(0.4)
+        col_w = (total_w - gap * (n - 1)) / n
+        start_x = Inches(0.66)
+        axis_y = Inches(2.9)
+        
+        # Horizontal Connecting Line
+        line = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(0.9), axis_y, Inches(11.5), Inches(0.04))
+        line.fill.solid()
+        line.fill.fore_color.rgb = self.theme["primary"]
+        line.line.fill.background()
+        
+        for i, m in enumerate(milestones[:n]):
+            x = start_x + i * (col_w + gap)
+            center_x = x + col_w / 2
+            
+            # Top Date / Phase Box (Above Axis)
+            tb_d = slide.shapes.add_textbox(x, Inches(1.8), col_w, Inches(0.95))
+            tf_d = tb_d.text_frame
+            tf_d.word_wrap = True
+            
+            p_date = tf_d.paragraphs[0]
+            p_date.alignment = PP_ALIGN.CENTER
+            r_date = p_date.add_run()
+            r_date.text = m.get("date", f"阶段 {i+1}")
+            apply_font_to_run(r_date, font_name=FONT_NAME, size=18, bold=True, color=self.theme["primary"])
+            
+            p_goal = tf_d.add_paragraph()
+            p_goal.alignment = PP_ALIGN.CENTER
+            p_goal.space_before = Pt(3)
+            r_goal = p_goal.add_run()
+            r_goal.text = m.get("title", "")
+            apply_font_to_run(r_goal, font_name=FONT_NAME, size=13, bold=True, color=self.theme["text_dark"])
+            
+            # Milestone Node Circle on Axis
+            node = slide.shapes.add_shape(MSO_SHAPE.OVAL, center_x - Inches(0.18), axis_y - Inches(0.16), Inches(0.36), Inches(0.36))
+            node.fill.solid()
+            node.fill.fore_color.rgb = self.theme["primary"]
+            node.line.color.rgb = RGBColor(0xFF, 0xFF, 0xFF)
+            node.line.width = Pt(2.5)
+            
+            # Card Below Axis (y=3.3" to y=6.7", h=3.4")
+            card_y = Inches(3.3)
+            card_h = Inches(3.4)
+            card = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, x, card_y, col_w, card_h)
+            apply_card_style(card, border_color=self.theme["border_light"])
+            
+            # Bullets inside Card
+            tb_c = slide.shapes.add_textbox(x + Inches(0.2), card_y + Inches(0.25), col_w - Inches(0.4), card_h - Inches(0.8))
+            tf_c = tb_c.text_frame
+            tf_c.word_wrap = True
+            
+            for b_idx, bullet in enumerate(m.get("bullets", [])):
+                p = tf_c.add_paragraph() if b_idx > 0 else tf_c.paragraphs[0]
+                p.space_before = Pt(6)
+                r_dot = p.add_run()
+                r_dot.text = "✔ "
+                apply_font_to_run(r_dot, font_name=FONT_NAME, size=10, bold=True, color=self.theme["primary"])
+                r_txt = p.add_run()
+                r_txt.text = bullet
+                apply_font_to_run(r_txt, font_name=FONT_NAME, size=11, color=self.theme["text_dark"])
+                
+            # Bottom Status Tag
+            status = m.get("status", "")
+            if status:
+                s_box = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, x + Inches(0.2), card_y + card_h - Inches(0.52), col_w - Inches(0.4), Inches(0.34))
+                apply_card_style(s_box, bg_color=self.theme["pill_bg"], border_color=self.theme["pill_border"])
+                p_s = s_box.text_frame.paragraphs[0]
+                p_s.alignment = PP_ALIGN.CENTER
+                r_s = p_s.add_run()
+                r_s.text = status
+                apply_font_to_run(r_s, font_name=FONT_NAME, size=9.5, bold=True, color=self.theme["primary"])
+        return slide
+
+    # --------------------------------------------------------------------------
+    # 8. Archetype: case (标杆案例与客户证言)
     # --------------------------------------------------------------------------
     def add_case_slide(self, title: str, quote: str, client: str, metrics: List[Dict[str, str]]):
         slide = self.prs.slides.add_slide(self.layout_content)
@@ -813,12 +895,22 @@ def build_deck_from_json(json_path: str, output_path: str, theme: str = "hosea")
     
     # 1. Cover
     cover_data = data.get("cover", {})
-    builder.add_cover(
+    cover_slide = builder.add_cover(
         title=cover_data.get("title", "合思企业解决方案"),
         subtitle=cover_data.get("subtitle", "让有限更有效"),
         copyright_text=cover_data.get("copyright", "© 2026 合思信息 版权所有")
     )
-    
+    cover_notes = cover_data.get("notes", "")
+    if cover_notes and hasattr(cover_slide, "notes_slide"):
+        try:
+            tf_cn = cover_slide.notes_slide.notes_text_frame
+            tf_cn.text = cover_notes
+            for p in tf_cn.paragraphs:
+                for r in p.runs:
+                    apply_font_to_run(r, font_name=FONT_NAME, size=11, color=RGBColor(0x33, 0x33, 0x33))
+        except Exception:
+            pass
+
     # 2. Agenda
     agenda_items = data.get("agenda", [])
     if agenda_items:
@@ -828,23 +920,38 @@ def build_deck_from_json(json_path: str, output_path: str, theme: str = "hosea")
     for slide_data in data.get("slides", []):
         stype = slide_data.get("type", "cards")
         title = slide_data.get("title", "")
+        slide = None
         
         if stype == "transition":
-            builder.add_transition(slide_data.get("number", "01"), title)
+            slide = builder.add_transition(slide_data.get("number", "01"), title)
         elif stype == "cards":
-            builder.add_cards_slide(title, slide_data.get("cards", []))
+            slide = builder.add_cards_slide(title, slide_data.get("cards", []))
         elif stype == "compare":
-            builder.add_compare_slide(title, slide_data.get("before", {}), slide_data.get("after", {}))
+            slide = builder.add_compare_slide(title, slide_data.get("before", {}), slide_data.get("after", {}))
         elif stype == "process":
-            builder.add_process_slide(title, slide_data.get("steps", []))
+            slide = builder.add_process_slide(title, slide_data.get("steps", []))
         elif stype == "kpi":
-            builder.add_kpi_slide(title, slide_data.get("metrics", []), slide_data.get("summary", ""))
+            slide = builder.add_kpi_slide(title, slide_data.get("metrics", []), slide_data.get("summary", ""))
         elif stype == "stack":
-            builder.add_stack_slide(title, slide_data.get("layers", []))
+            slide = builder.add_stack_slide(title, slide_data.get("layers", []))
         elif stype == "split":
-            builder.add_split_slide(title, slide_data.get("narrative", {}), slide_data.get("initiatives", []))
+            slide = builder.add_split_slide(title, slide_data.get("narrative", {}), slide_data.get("initiatives", []))
+        elif stype == "timeline":
+            slide = builder.add_timeline_slide(title, slide_data.get("milestones", []))
         elif stype == "case":
-            builder.add_case_slide(title, slide_data.get("quote", ""), slide_data.get("client", ""), slide_data.get("metrics", []))
+            slide = builder.add_case_slide(title, slide_data.get("quote", ""), slide_data.get("client", ""), slide_data.get("metrics", []))
+            
+        # Speaker Notes Support (Inspired by ppt-master)
+        notes = slide_data.get("notes", "")
+        if slide and notes and hasattr(slide, "notes_slide"):
+            try:
+                tf_n = slide.notes_slide.notes_text_frame
+                tf_n.text = notes
+                for p in tf_n.paragraphs:
+                    for r in p.runs:
+                        apply_font_to_run(r, font_name=FONT_NAME, size=11, color=RGBColor(0x33, 0x33, 0x33))
+            except Exception:
+                pass
             
     # 4. Closing
     if data.get("include_closing", True):
