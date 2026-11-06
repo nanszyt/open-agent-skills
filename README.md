@@ -46,40 +46,59 @@ python scripts/sync.py --install hose-ppt --workspace "C:\path\to\your-team-proj
 
 ---
 
-## 🔄 如何向本仓库发布新技能？(Publishing Workflow)
+## 🔄 如何向本仓库发布与同步新技能？(Branch & PR Workflow)
+
+> ⚠️ **协作铁律**：本仓库遵循严格的 Git 同步规范，**严禁直接在 `main` 主分支提交或直推**。所有改动必须通过全小写特性分支发起 Pull Request (PR)，经 CI 自动化质检通过后合入。详情参见 👉 [**CONTRIBUTING.md**](./CONTRIBUTING.md)。
 
 本仓库配备了全自动打包发布流水线：
 
 ```mermaid
 flowchart LR
-    A["本地开发/同步新技能"] --> B["放入 skills/<new-skill>/"]
-    B --> C["Git Push 到 main 分支"]
-    C --> D["GitHub Actions 自动触发"]
-    D --> E["生成独立 zip (含双端 installer)"]
-    D --> F["自动上传至 GitHub Release 附件"]
-    F --> G["对外提供永久直链一键下载"]
+    A["1. 新建特性分支 feat/<skill>"] --> B["2. 放入 skills/<skill>/ 并通过本地校验"]
+    B --> C["3. 提交并推送至远程特性分支"]
+    C --> D["4. 发起 GitHub Pull Request"]
+    D --> E["5. CI 自动化校验通过并合并至 main"]
+    E --> F["6. 自动打包独立 zip 挂载 Release 附件"]
+    F --> G["7. 对外提供永久直链一键下载"]
 ```
 
-### 操作步骤：
-1. **将你想要公开的技能文件夹复制到 `skills/` 目录下**：
-   ```bash
-   cp -r /path/to/my-skill skills/my-skill
+### 标准操作步骤：
+1. **本地环境守卫一键初始化**（首次拉取仓库只需执行一次）：
+   ```powershell
+   # Windows PowerShell:
+   .\.githooks\setup.ps1
+
+   # macOS / Linux / Git Bash:
+   bash .githooks/setup.sh
    ```
-2. **本地合规性校验**：
+2. **切出全小写特性分支**：
    ```bash
+   git checkout main
+   git pull origin main
+   git checkout -b feat/my-skill
+   ```
+3. **添加技能并进行合规性自检**：
+   ```bash
+   # 复制技能到 skills/ 目录后执行校验
    python scripts/validate.py
    ```
-3. **提交并推送到 GitHub**：
+4. **规范提交并推送到远程特性分支**：
    ```bash
    git add skills/my-skill
-   git commit -m "feat(skill): add my-skill"
-   git push origin main
+   git commit -m "feat(skill): 添加 my-skill 技能"
+   git push -u origin feat/my-skill
    ```
-4. **触发自动发布**：GitHub Actions 会在 1 分钟内自动打包并更新 [Latest Release](https://github.com/nanszyt/open-agent-skills/releases/latest) 中的附件列表！
+5. **创建 Pull Request 合入 `main`**：
+   ```bash
+   gh pr create --title "feat(skill): 添加 my-skill 技能" --body "详见变更说明"
+   ```
+6. **自动化发布**：PR 经审查合入 `main` 后，GitHub Actions 会在 1 分钟内自动打包并更新 [Latest Release](https://github.com/nanszyt/open-agent-skills/releases/latest) 中的独立下载包附件！
 
 ---
 
 ## 规范与标准
 
+* 贡献与 Git 分支 PR 规范请参考：👉 [**CONTRIBUTING.md**](./CONTRIBUTING.md)
+* Agent 协作守则请参考：👉 [**AGENTS.md**](./AGENTS.md)
 * 技能编写规范请参考：👉 [Agent Skills Specification](./spec/agent-skills-spec.md)
 * 脚手架模板请参考：👉 [`template/`](./template/)

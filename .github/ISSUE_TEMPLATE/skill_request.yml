@@ -1,0 +1,46 @@
+name: 技能需求建议 (Skill Request)
+description: 提出想新增的 AI Agent 技能建议或官方模板构想
+title: "[技能需求]: "
+labels: ["enhancement", "skill-request"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ### 欢迎提交智能体技能建议！
+        感谢为 **Open Agent Skills** 贡献您的创意与场景需求！
+        > **语言规范**：本仓库统一使用**简体中文**进行需求交流与讨论。
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: 技能名称与核心目标
+      description: 请给出建议的技能英文标识（全小写+中划线，如 `sql-optimizer`）与核心中文目标。
+      placeholder: 例如：希望新增一个 sql-optimizer 技能，帮助对大模型生成的 SQL 进行执行计划分析和性能优化...
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: 适用场景与触发词
+      description: 该技能在什么具体业务场景下使用？用户在智能体中输入什么触发词时应该调用它？
+      placeholder: 场景：数据库慢查询诊断、报表编写；触发词：/sql-opt、优化SQL、explain分析...
+    validations:
+      required: true
+
+  - type: textarea
+    id: tools_and_scripts
+    attributes:
+      label: 依赖工具或配套脚本（可选）
+      description: 该技能是否需要配套的 Python 脚本、参考模版、图标资源或调用外部 API？
+      placeholder: 如：提供一个本地解析 EXPLAIN JSON 的 Python 脚本，或提供常用的索引优化规范模板...
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: 补充说明与参考材料
+      description: 可在此附上相关的行业参考、开源规范链接或示例提示词。
+    validations:
+      required: false

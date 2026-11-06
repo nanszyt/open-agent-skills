@@ -5,6 +5,8 @@ __pycache__/
 *.so
 .Python
 env/
+venv/
+.venv/
 build/
 develop-eggs/
 dist/
@@ -21,6 +23,9 @@ wheels/
 .installed.cfg
 *.egg
 
+# Markdown-First 草稿与临时生成目录 (杜绝命令行内联多行长文本)
+.drafts/
+
 # PPT & Media temp
 slides_preview/
 *.tmp
@@ -35,5 +40,9 @@ ehthumbs.db
 [Nn]onprofit/
 
 # IDE / Agent logs
+.idea/
+.vscode/
+*.swp
+*.swo
 .system_generated/
 *.log

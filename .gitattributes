@@ -1,0 +1,10 @@
+# 统一跨平台换行符规范
+* text=auto
+
+# Git Hooks 与 Shell 脚本必须强制使用 LF 换行符（防止 Windows 下报 '\r: command not found'）
+.githooks/* text eol=lf
+*.sh text eol=lf
+
+# Windows 批处理脚本强制使用 CRLF 换行符
+*.bat text eol=crlf
+*.cmd text eol=crlf

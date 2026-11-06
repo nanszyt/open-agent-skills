@@ -1,0 +1,62 @@
+name: 缺陷反馈 (Bug Report)
+description: 反馈技能使用异常、格式校验报错或一键安装器执行故障
+title: "[缺陷反馈]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ### 感谢提交缺陷反馈！
+        > **语言规范**：本仓库统一使用**简体中文**进行交流与排查。
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: 涉及的技能或脚本
+      description: 请指明出问题的技能名称（如 `skills/hose-ppt`）或脚本文件（如 `install.bat` / `scripts/sync.py`）。
+      placeholder: 例如：`hose-ppt` 导出 PPT 时报错 / `install.bat` 在 Windows 10 上解压路径错误...
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: 复现步骤
+      description: 请详细描述导致问题发生的操作步骤。
+      placeholder: |
+        1. 下载 hose-ppt.zip 并解压
+        2. 运行 install.bat
+        3. 在 Antigravity 中输入命令触发...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期望行为
+      description: 您期望的正确表现是什么？
+      placeholder: 安装器应正常输出安装成功，并在对应目录下生成技能文件...
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: 错误日志与终端输出
+      description: 请粘贴终端完整的报错信息或堆栈跟踪。
+      render: shell
+    validations:
+      required: false
+
+  - type: dropdown
+    id: environment
+    attributes:
+      label: 运行操作系统
+      options:
+        - Windows 11
+        - Windows 10
+        - macOS
+        - Linux / Ubuntu
+        - 其他
+    validations:
+      required: true

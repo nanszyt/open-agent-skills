@@ -1,0 +1,126 @@
+#!/bin/sh
+# 跨平台 pre-commit 钩子：
+# 1. 禁止在主分支 (main/master) 直接提交代码
+# 2. 强制分支命名全小写（规避 Windows NTFS 大小写不敏感冲突）
+# 3. 拦截暂存区单文件超过 15MB 的超大文件提交（防仓库体积膨胀，大文件请走 Release 附件）
+# 4. 拦截 Windows 非法文件名与系统保留设备名（保护跨平台检出兼容性）
+# 输出规范：终端提示一律使用英文 ASCII，避免 Windows 代码页乱码；注释可用中文。
+
+current_branch=$(git symbolic-ref --short HEAD 2>/dev/null || git rev-parse --abbrev-ref HEAD 2>/dev/null)
+
+# 1. 校验受保护的主分支
+if [ "$current_branch" = "main" ] || [ "$current_branch" = "master" ]; then
+    echo ""
+    echo "======================================================================"
+    echo "[pre-commit] BLOCKED: direct commits to protected branch '$current_branch'."
+    echo "======================================================================"
+    echo "Team rules:"
+    echo "  1. main/master is protected. Do not develop or commit directly on it."
+    echo "  2. All features, skills and fixes belong on a feature branch (feat/*, fix/*)."
+    echo "  3. Merge through a GitHub Pull Request reviewed on the remote."
+    echo ""
+    echo "How to fix:"
+    echo "  Create and switch to a feature branch (current changes follow you):"
+    echo "    git checkout -b feat/your-skill-name"
+    echo "  Then run git commit again."
+    echo "======================================================================"
+    echo ""
+    exit 1
+fi
+
+# 2. 校验分支名是否包含大写字母（Windows/macOS 大小写不敏感安全策略）
+if echo "$current_branch" | grep -q '[A-Z]'; then
+    lowercase_branch=$(echo "$current_branch" | tr '[:upper:]' '[:lower:]')
+    echo ""
+    echo "======================================================================"
+    echo "[pre-commit] BLOCKED: branch names must be lowercase."
+    echo "======================================================================"
+    echo "Current branch: $current_branch"
+    echo "Why:"
+    echo "  Windows and macOS file systems are case-insensitive, while Linux and"
+    echo "  GitHub are case-sensitive. Lowercase-only branch names avoid"
+    echo "  cross-platform reference conflicts."
+    echo ""
+    echo "How to fix (rename the current branch to lowercase):"
+    echo "  git branch -m $lowercase_branch"
+    echo "  Then run git commit again (staged files and changes are preserved)."
+    echo "======================================================================"
+    echo ""
+    exit 1
+fi
+
+# 3. 校验暂存区文件（文件体积与 Windows 文件名合规性）
+MAX_FILE_SIZE=15728640  # 15MB in bytes
+
+staged_files=$(git diff --cached --name-only -z --diff-filter=ACMR | tr '\0' '\n')
+
+if [ -n "$staged_files" ]; then
+    OLD_IFS="$IFS"
+    IFS='
+'
+    for file in $staged_files; do
+        # 3.1 校验单文件体积上限 (15MB)
+        if [ -f "$file" ]; then
+            file_size=$(wc -c < "$file" 2>/dev/null | tr -d ' ')
+            if [ -n "$file_size" ] && [ "$file_size" -gt "$MAX_FILE_SIZE" ]; then
+                size_mb=$(awk "BEGIN {printf \"%.2f\", $file_size/1048576}")
+                echo ""
+                echo "======================================================================"
+                echo "[pre-commit] BLOCKED: staged file exceeds the 15 MB limit."
+                echo "======================================================================"
+                echo "File: $file (${size_mb} MB > 15 MB)"
+                echo "Why: large binaries bloat the repository history permanently."
+                echo "How to fix:"
+                echo "  1. Move the file out of the repository and ignore it in .gitignore."
+                echo "  2. Publish installers or binaries as GitHub Releases assets."
+                echo "======================================================================"
+                echo ""
+                IFS="$OLD_IFS"
+                exit 1
+            fi
+        fi
+
+        # 3.2 校验 Windows 文件名合法性（字符与设备保留字）
+        filename=$(basename "$file")
+
+        # 校验 Windows 非法特殊字符: : * ? " < > |
+        case "$filename" in
+            *[\:\*\?\"\<\>\|]*)
+                echo ""
+                echo "======================================================================"
+                echo "[pre-commit] BLOCKED: filename contains characters illegal on Windows."
+                echo "======================================================================"
+                echo "File: $file"
+                echo "Why: Windows forbids : * ? \" < > | in file names. Committing such a"
+                echo "  file breaks clone/checkout for Windows users."
+                echo "How to fix: rename the file, then commit again."
+                echo "======================================================================"
+                echo ""
+                IFS="$OLD_IFS"
+                exit 1
+                ;;
+        esac
+
+        # 校验 Windows 设备保留名: con, prn, aux, nul, com1-com9, lpt1-lpt9
+        base_no_ext=$(echo "$filename" | sed -E 's/\.[^.]*$//' | tr '[:upper:]' '[:lower:]')
+        case "$base_no_ext" in
+            con|prn|aux|nul|com[1-9]|lpt[1-9])
+                echo ""
+                echo "======================================================================"
+                echo "[pre-commit] BLOCKED: filename uses a reserved Windows device name."
+                echo "======================================================================"
+                echo "File: $file"
+                echo "Why: CON, PRN, AUX, NUL, COM1-9, LPT1-9 are legacy Windows device"
+                echo "  names. Committing them breaks checkout for Windows users."
+                echo "How to fix: rename the file, then commit again."
+                echo "======================================================================"
+                echo ""
+                IFS="$OLD_IFS"
+                exit 1
+                ;;
+        esac
+    done
+    IFS="$OLD_IFS"
+fi
+
+exit 0

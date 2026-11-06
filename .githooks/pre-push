@@ -1,0 +1,53 @@
+#!/bin/sh
+# 跨平台 pre-push 钩子：
+# 1. 禁止直接向远程主分支 (main/master) 推送代码
+# 2. 禁止向远程推送含大写字母的分支名
+# 输出规范：终端提示一律使用英文 ASCII，避免 Windows 代码页乱码；注释可用中文。
+
+remote="$1"
+url="$2"
+
+zero_oid="0000000000000000000000000000000000000000"
+
+while read -r local_ref local_oid remote_ref remote_oid; do
+    # 1. 拦截直接向主分支推送
+    if [ "$remote_ref" = "refs/heads/main" ] || [ "$remote_ref" = "refs/heads/master" ]; then
+        echo ""
+        echo "======================================================================"
+        echo "[pre-push] BLOCKED: pushing directly to protected branch ($remote_ref)."
+        echo "======================================================================"
+        echo "Team rules:"
+        echo "  1. The remote main branch only accepts merges via reviewed Pull Requests."
+        echo "  2. Never push to the remote main branch directly, even after a local merge."
+        echo ""
+        echo "Recommended flow:"
+        echo "  1. Push your current branch to a remote feature branch:"
+        echo "       git push -u origin <your-feature-branch>"
+        echo "  2. Open a Pull Request (e.g. gh pr create --body-file .drafts/pr-body.md)"
+        echo "  3. Merge after CI and review (e.g. gh pr merge <PR_ID> --merge --delete-branch)"
+        echo "======================================================================"
+        echo ""
+        exit 1
+    fi
+
+    # 2. 拦截推送包含大写字母的远程分支引用（跳过删除远程分支的情况）
+    if [ "$local_oid" != "$zero_oid" ] && echo "$remote_ref" | grep -q 'refs/heads/.*[A-Z]'; then
+        branch_name=${remote_ref#refs/heads/}
+        lowercase_branch=$(echo "$branch_name" | tr '[:upper:]' '[:lower:]')
+        echo ""
+        echo "======================================================================"
+        echo "[pre-push] BLOCKED: remote branch names must be lowercase."
+        echo "======================================================================"
+        echo "Target branch: $branch_name"
+        echo "Why: Windows and Linux treat letter case differently; lowercase-only"
+        echo "  remote branches avoid case conflicts."
+        echo "How to fix:"
+        echo "  git branch -m $lowercase_branch"
+        echo "  git push -u origin $lowercase_branch"
+        echo "======================================================================"
+        echo ""
+        exit 1
+    fi
+done
+
+exit 0

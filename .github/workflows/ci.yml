@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  validate-skills:
+    name: 技能规范与合规性校验
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 设置 Python 运行环境
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 校验技能格式与跨平台合规性
+        run: |
+          python scripts/validate.py
+
+      - name: 校验全仓单文件体积上限 (≤ 15MB)
+        run: |
+          find . -type f -not -path '*/.*' -size +15M | while read file; do
+            echo "::error file=$file::File exceeds 15MB limit: $file"
+            exit 1
+          done

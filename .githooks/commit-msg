@@ -1,0 +1,71 @@
+#!/bin/sh
+# 跨平台 commit-msg 钩子：
+# 强制校验 Git Commit 第一行必须遵循 Conventional Commits 规范与简体中文说明
+# 输出规范：终端提示一律使用英文 ASCII，避免 Windows 代码页乱码；注释可用中文。
+
+msg_file="$1"
+
+if [ -z "$msg_file" ] || [ ! -f "$msg_file" ]; then
+    echo "[commit-msg] ERROR: commit message file not provided or not found."
+    exit 1
+fi
+
+# 提取第一行有效提交内容（过滤注释行和空行）
+first_line=$(grep -v '^[[:space:]]*#' "$msg_file" 2>/dev/null | grep -v '^[[:space:]]*$' 2>/dev/null | head -n 1)
+
+# 如果提交信息完全为空，由 git 原生逻辑拦截
+if [ -z "$first_line" ]; then
+    exit 0
+fi
+
+# 豁免由 Git 自动生成的标准 Merge / Revert / Fixup / Squash 提交
+case "$first_line" in
+    Merge\ *|Revert\ *|fixup\!*|squash\!*)
+        exit 0
+        ;;
+esac
+
+# 校验 Conventional Commits 格式：
+# 前缀必须是小写合法 type（可选带小写 scope），后跟英文半角冒号与空格，以及至少 2 个字符的描述
+PATTERN="^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert|infra|skill)(\([a-z0-9_.-]+\))?: .{2,}"
+
+if ! echo "$first_line" | grep -Eq "$PATTERN"; then
+    echo ""
+    echo "======================================================================"
+    echo "[commit-msg] BLOCKED: commit message does not follow Conventional Commits."
+    echo "======================================================================"
+    echo "Current commit title:"
+    echo "  '$first_line'"
+    echo ""
+    echo "Required format:"
+    echo "  <type>(<scope>): <Chinese description>"
+    echo "  or:"
+    echo "  <type>: <Chinese description>"
+    echo ""
+    echo "Allowed types:"
+    echo "  feat      New feature or new skill"
+    echo "  fix       Bug fix"
+    echo "  skill     Skill addition, prompt edit or configuration"
+    echo "  docs      Documentation changes"
+    echo "  ci        CI/CD & GitHub Actions"
+    echo "  infra     Packaging & automation scripts"
+    echo "  refactor  Code refactoring"
+    echo "  test      Testing changes"
+    echo "  chore     Maintenance & dependencies"
+    echo ""
+    echo "Examples:"
+    echo "  feat(skill): 添加 hose-ppt 合思官方标准母版技能"
+    echo "  fix(validator): 修复技能名称与目录名大小写校验逻辑"
+    echo "  docs: 补充贡献指南与分支PR规范说明"
+    echo "  ci: 增加 Pull Request 自动化技能校验流水线"
+    echo ""
+    echo "How to fix:"
+    echo "  git commit --amend -F .drafts/commit-msg.md"
+    echo "  or:"
+    echo "  git commit --amend -m \"type: 简明中文描述\""
+    echo "======================================================================"
+    echo ""
+    exit 1
+fi
+
+exit 0
