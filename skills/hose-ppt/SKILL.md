@@ -5,7 +5,7 @@ description: "Use this skill whenever creating, editing, updating, or formatting
 
 # 高端演示文稿与合思 (Hosea) 标准设计技能
 
-本 Skill 深度融合**合思官方企业母版**与**全球顶级 AI 演示文稿设计规范（参考 Anthropic PPTX Standard 及业内顶流设计系统）**。兼顾合思官方品牌资产与通用高管汇报设计内容，彻底告别枯燥的纯文字列表与廉价的 AI 模板感。
+本 Skill 深度融合**合思官方企业母版**与**全球顶级 AI 演示文稿设计规范（参考 Anthropic PPTX Standard、ppt-master 与 open-design 设计系统）**。兼顾合思官方品牌资产与通用高管汇报设计内容，彻底告别枯燥的纯文字列表与廉价的 AI 模板感。
 
 ---
 
@@ -47,8 +47,28 @@ description: "Use this skill whenever creating, editing, updating, or formatting
 | **`kpi`** | 核心成效、业务看板、量化 ROI 亮点 | 3~4 个独立大数字看板（`46-60pt` 粗体），下方配指标名称与增长说明，底部配备全宽 `💡 核心成效` 综合总结栏。 |
 | **`stack`** | 技术架构全景、业务分层全景、数智中台 | 4 层纵向堆叠架构：左侧实色层级标牌（如 `04. 智慧展现与决策层`），右侧白底卡片内平铺 4~5 个能力组件胶囊。 |
 | **`split`** | 左右非对称叙事、战略洞见 + 落地动作 | 左侧 40% 宽度高对比度英雄卡（战略定位引言与核心洞见），右侧 60% 宽度 2~3 个横向落地的动作细分卡片。 |
-| **`case`** | 标杆客户证言、权威背书、实践验证 | 顶部大型引用框（大双引号 `“ ”` + CFO/高管权威引言），底部 3 个量化收益微卡片（如 `月结关账提前 3 天`）。 |
+| **`timeline`** | 时间轴演进路线、数字化发展规划、里程碑 | 上部年份/阶段标签与目标，横向实色贯穿轴与节点圆环，下部白底卡片内列出阶段任务并附带底部状态胶囊（如 `基建就绪`、`全面上线`）。 |
+| **`case`** | 标杆客户证言、权威背书、实践验证 | 顶部大型引用框（大双引号 `“ ”` + CFO/高管权威引言），底部 3 个量化业务收益大数字微卡片（如 `月结关账提前 3 天`）。 |
 | **`transition`** | 篇章章节过渡转场 | 极简微光卡片，居中巨幅 `01.` 标志性序号徽标 + 章节主标题。 |
+
+---
+
+## 🎙️ 演讲者手卡与讲者备注系统 (Speaker Notes - Inspired by ppt-master)
+
+向高管或客户汇报时，PPT 页面应当保持精炼克制，而深度的支撑论据、演讲台词与 Q&A 预案应当放在**讲者备注区 (Speaker Notes)**：
+
+- **自动化注入**：在任何幻灯片对象（包括封面 `cover` 和各内容页 `slides`）中添加 `"notes": "..."` 字段；
+- **原生 PPTX 呈现**：构建脚本会自动将台词注入到 PowerPoint 的原生讲者备注区。在会议室投影或切换为“演讲者视图 (Presenter View)”时，主屏放 PPT，演说者屏幕即时查看发言提纲与背景数据。
+
+---
+
+## 📄 文档/长文/访谈纪要转 PPT 标准心法 (Document-to-Deck Flow)
+
+当用户输入一篇长文档、Word 方案或客户访谈纪要时，遵循以下 4 步将其优雅降维：
+1. **提取核心叙事线 (Storyline)**：识别客户痛点（现状）➔ 方案支柱（解法）➔ 系统架构（全景）➔ 实施演进（落地）➔ 标杆成效（ROI）。
+2. **指派版式原型 (Assign Archetypes)**：痛点用 `compare`，支柱用 `cards`，全景用 `stack`，落地用 `process` 或 `timeline`，数据用 `kpi`，证言用 `case`。
+3. **字句高度浓缩 (Density Compression)**：每张卡片不超过 3 条 Bullet Points，每条要点控制在 15~25 字以内，把详细背景移入 `"notes"` 讲者备注。
+4. **一键编译与三层质检**：执行 `build_deck.py` ➔ `layout_qa.py` ➔ `export_slides.py` 完成交付。
 
 ---
 
@@ -79,7 +99,8 @@ description: "Use this skill whenever creating, editing, updating, or formatting
   "cover": {
     "title": "新一代敏捷业财一体化方案",
     "subtitle": "重构企业支出管理 · 让有限更有效",
-    "copyright": "© 2026 合思信息 版权所有"
+    "copyright": "© 2026 合思信息 版权所有",
+    "notes": "开场致辞：各位高管、领导好，今天非常荣幸向大家汇报合思新一代敏捷业财解决方案。"
   },
   "agenda": ["企业痛点与现状对比", "全场景方案与架构全景", "实施路径与客户成效"],
   "slides": [
@@ -98,38 +119,17 @@ description: "Use this skill whenever creating, editing, updating, or formatting
       "after": {
         "title": "合思敏捷新模式 (After)",
         "points": ["全场景因公消费对公结算，员工全流程免垫资免开票", "凭证全自动化率达 95% 以上，关账缩短至 24 小时"]
-      }
+      },
+      "notes": "引导客户反思传统垫资报销带来的员工怨气与财务关账压力。"
     },
     {
-      "type": "cards",
-      "title": "合思敏捷费控核心能力三大支柱",
-      "cards": [
-        {
-          "num": "01",
-          "icon": "receipt",
-          "title": "敏捷费控 · 全场景集采",
-          "desc": "打通企业商旅、用餐与用车，集中对公结算。",
-          "bullets": ["聚合主流商旅平台", "消费事前智能管控"],
-          "tag": "应用场景 · 因公商旅与对公集采"
-        }
-      ]
-    },
-    {
-      "type": "process",
-      "title": "敏捷业财标准化实施四步法",
-      "steps": [
-        { "title": "调研与蓝图", "bullets": ["组织与科目梳理", "审批流确认"], "output": "蓝图规划方案" },
-        { "title": "集成联调", "bullets": ["ERP 对接", "银企直联"], "output": "联调测试报告" }
-      ]
-    },
-    {
-      "type": "kpi",
-      "title": "某大型制造龙头集团上线实测成效",
-      "metrics": [
-        { "value": "85%", "label": "报销周期缩短", "desc": "压缩至24小时内" },
-        { "value": "95%+", "label": "凭证自动化率", "desc": "业务驱动自动入账" }
+      "type": "timeline",
+      "title": "敏捷业财数字化演进路线图",
+      "milestones": [
+        { "date": "第 1-2 周", "title": "蓝图梳理", "bullets": ["组织映射", "审批配置"], "status": "基建就绪" },
+        { "date": "第 3-4 周", "title": "银企联调", "bullets": ["接口打通", "试点上线"], "status": "试点跑通" }
       ],
-      "summary": "全面告别手工贴票报销时代，年均节约直接资金与协同工时成本数千万元。"
+      "notes": "向管理层展现平滑过渡节奏，不影响日常业务连续性。"
     }
   ],
   "include_closing": true
