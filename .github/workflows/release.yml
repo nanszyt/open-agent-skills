@@ -1,0 +1,44 @@
+name: Auto Package & Release Skills
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'skills/**'
+      - '.github/workflows/release.yml'
+      - 'scripts/package_skills.py'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Package Each Skill into Independent ZIP
+        run: |
+          mkdir -p dist
+          python scripts/package_skills.py --output-dir dist
+
+      - name: Publish or Update GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          name: "📦 Latest Agent Skills Release"
+          body_path: dist/RELEASE_NOTES.md
+          files: dist/*.zip
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
