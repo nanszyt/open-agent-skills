@@ -38,7 +38,7 @@ def inspect_deck_layout(pptx_path: str):
                 # ignore full height sidebar on agenda
                 if w < 4.0 and x == 0 and h >= 7.0:
                     continue
-                if w > 2.0 and h > 1.5:  # significant card
+                if w > 2.0 and h >= 1.0:  # significant card container
                     cards.append({"name": shp.name, "x": x, "y": y, "w": w, "h": h, "shape": shp})
             elif shp.has_text_frame:
                 text_boxes.append({"name": shp.name, "x": x, "y": y, "w": w, "h": h, "tf": shp.text_frame})
@@ -47,8 +47,8 @@ def inspect_deck_layout(pptx_path: str):
             print(f"  Found {len(cards)} card containers.")
             # Check horizontal spacing & alignment
             cards_sorted = sorted(cards, key=lambda c: c["x"])
-            left_margin = cards_sorted[0]["x"]
-            right_margin = slide_w - (cards_sorted[-1]["x"] + cards_sorted[-1]["w"])
+            left_margin = min(c["x"] for c in cards)
+            right_margin = slide_w - max(c["x"] + c["w"] for c in cards)
             margin_diff = abs(left_margin - right_margin)
             
             if margin_diff > 0.2:
@@ -79,6 +79,10 @@ def inspect_deck_layout(pptx_path: str):
                     max_bottom_y = max(s["bottom"] for s in contained_shapes)
                     active_height = max_bottom_y - top_y
                     fill_ratio = active_height / c["h"] if c["h"] > 0 else 0
+                elif c["shape"].has_text_frame and c["shape"].text_frame.text.strip():
+                    # Shape itself contains the text
+                    fill_ratio = 0.85
+                    active_height = c["h"] * 0.85
                 else:
                     fill_ratio = 0
                     active_height = 0

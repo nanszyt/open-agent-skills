@@ -1,138 +1,161 @@
 ---
 name: hose-ppt
-description: "Use this skill whenever creating, editing, updating, or formatting presentations, pitch decks, client proposals, financial transformation solutions, or slide decks using the official Hosea (合思) corporate template style. Trigger whenever the user mentions '合思', '合思PPT', '合思模板', '做个合思风格的PPT', '制作合思方案', '合思汇报', 'hose-ppt', 'hose ppt', 'hosea', 'hosea deck', or asks to generate B2B financial SaaS presentations in this design system."
+description: "Use this skill whenever creating, editing, updating, or formatting presentations, pitch decks, client proposals, financial transformation solutions, or slide decks. Dual-mode support: 1) Official Hosea (合思) corporate master template style, and 2) Universal high-end executive presentations based on the Anthropic PPTX design standard (8 slide archetypes, topic-informed palettes, strict avoid list). Trigger whenever the user mentions '合思', '合思PPT', '合思模板', '做个合思风格的PPT', '制作合思方案', '合思汇报', 'hose-ppt', 'hose ppt', 'hosea', 'hosea deck', or asks to create/refine professional B2B SaaS and executive presentation decks."
 ---
 
-# 合思 (Hosea) 标准演示文稿制作技能
+# 高端演示文稿与合思 (Hosea) 标准设计技能
 
-本 Skill 封装了合思官方标准母版资产、设计规范及全自动化 PPT 构建工作流。通过本 Skill，可一键生成具备合思官方高品质视觉（矢量 Logo、科技封底、全国研发中心与直营网络图、标志性蓝绿配饰与白底卡片流）的 PPT。
-
----
-
-## 资产与工具索引
-
-- **官方标准母版**：[template.pptx](./resources/template.pptx)（16:9 宽屏，内含封面、目录、篇章过渡、空白、标题与内容、官方封底共 6 套 Layout）
-- **核心构建脚本**：[build_deck.py](./scripts/build_deck.py)（基于母版直接生成标准化演示文稿的 Python 引擎）
-- **矢量图标与简笔画服务**：[icon_service.py](./scripts/icon_service.py)（企业级线性图标库、在线自动拉取、品牌色注入及高清栅格化）
-- **布局与间距质检工具**：[layout_qa.py](./scripts/layout_qa.py)（检测卡片内容填充率、空白率、边距对称性及呼吸感）
-- **视觉规范手册**：[design_system.md](./references/design_system.md)（色彩、字体、卡片、间距与组件参数）
-- **输入范例结构**：[sample_outline.json](./resources/sample_outline.json)（开箱即用的多页结构数据模型）
+本 Skill 深度融合**合思官方企业母版**与**全球顶级 AI 演示文稿设计规范（参考 Anthropic PPTX Standard 及业内顶流设计系统）**。兼顾合思官方品牌资产与通用高管汇报设计内容，彻底告别枯燥的纯文字列表与廉价的 AI 模板感。
 
 ---
 
-## 视觉标准速查 (Design System Tokens)
+## 🎨 顶级演示文稿核心设计原则 (Design Philosophy)
 
-- **画布尺寸**：16:9 宽屏（`13.33" × 7.50"` / `33.87cm × 19.05cm`）
-- **主品牌色 (Primary Blue)**：`#2455FF`（用于大标题强调、卡片标志性数字、按钮、关键图标）
-- **活力点缀色 (Accent Green)**：`#34DE4C`（用于标志性序号点 `01.`、绿色箭头、合规/增长状态）
-- **深灰主文本 (Dark Slate)**：`#303B47`（用于内页标题、卡片主标题、一级正文）
-- **辅助低调灰 (Muted Gray)**：`#718096`（用于次级说明、副标题、数据单位）
-- **背景与卡片底色**：
-  - 页面浅灰底：`#F7F7F7`
-  - 浮层卡片白：`#FFFFFF`（圆角矩形，边框 `1pt #EAEEF5`）
-- **统一标准字体**：**微软雅黑 (Microsoft YaHei)** 全局统一应用
+### 1. 绝不制作枯燥的幻灯片 (Don't Create Boring Slides)
+- **每一页必须包含视觉锚点 (Visual Anchor)**：严禁全篇清一色的白底纯文字与 Bullet Points；每一页必须通过**矢量图标徽章**、**数据大字看板**、**横向流程流转**、**双栏现状方案对比**或**分层架构图**组织内容。
+- **杜绝版式重复 (Layout Variety)**：整份文稿严禁连续出现同一种版式（如连续多页 3 列卡片）。必须根据叙事逻辑，在 8 大经典版式原型之间交替演进。
+- **主次分明而非绝对均等 (Dominance Over Equality)**：主色占据 60%~70% 的核心视觉重量，1~2 个辅助色，1 个高对比度点睛色。
 
----
+### 2. 严格的避坑清单与排版铁律 (The Strict Avoid List)
+- ❌ **严禁在标题下方使用强调下划线 (NEVER use accent lines under titles)**：这是 AI 劣质幻灯片的典型标志，必须通过留白与层级建立秩序。
+- ❌ **严禁添加无意义的装饰色彩条或边缘条 (NEVER add decorative color bars or stripes)**：如卡片单边彩线、四周随意彩条等，均属于低质 AI 填充物。
+- ❌ **正文与列表严禁居中对齐 (Left-align body text)**：标题与数据大字可居中，正文、描述、清单项必须一律左对齐。
+- ❌ **严禁文字溢出或卡片下半截过度留白**：严格遵循内容填充率黄金律（75%~90%），如果文字较少必须自适应收缩卡片并垂直居中。
 
-## 标准制作工作流 (Standard Workflow)
-
-当用户提出需要制作合思风格的 PPT（如“为某客户做一份合思费控报销解决方案”、“梳理合思产品规划汇报”等）时，严格遵循以下 4 步执行：
-
-### 第 1 步：大纲结构化梳理 (Structure & Architecture)
-
-将用户输入的需求、文档或方案整理为清晰的页面结构：
-1. **封面 (Cover)**：主标题、副标题/Slogan（“未来财务用合思 · 让有限更有效”）、版权信息。
-2. **目录 (Agenda)**：3 至 5 个核心章节。
-3. **篇章过渡 (Transition)**：每个章节开始前的标志性转场页（`01.` + 章节名）。
-4. **正文页 (Content Slides)**：
-   - **痛点/方案页 (Cards Layout)**：2列、3列或4列白底卡片，每张卡片含标志性数字徽标（`01.`）、卡片主标、详细说明、核心要点清单。
-   - **成效/指标页 (KPI Layout)**：3至4个巨型数字（44pt `#2455FF`），下配指标标签与说明，底部配备“💡 核心成效”大宽幅总结栏。
-5. **官方封底 (Closing)**：自动附带官方封底（中国服务网点、400服务电话、官网、公众号二维码）。
+### 3. 字号极差与排版层级 (Extreme Size Contrast)
+- **封面主标**：`36 - 44 pt` Bold
+- **内页主标**：`20 - 24 pt` Bold（统一居中或居左）
+- **篇章过渡**：`44 - 48 pt` Bold（标志性 `01.`）
+- **数据大字**：`46 - 60 pt` Bold（巨幅数字形成视觉锤）
+- **卡片标题**：`16 - 18 pt` Bold
+- **正文说明**：`12 - 14 pt` Regular
+- **清单要点**：`11 - 12 pt` Regular（前缀 `✔ ` 或 `• `）
+- **场景胶囊**：`9.5 - 10.5 pt` Bold
+- **统一字体**：中文 100% 统一为 **微软雅黑 (Microsoft YaHei)**。
 
 ---
 
-### 第 2 步：选择构建方式 (Build Engine)
+## 🏛️ 8 大高级版式原型库 (The 8 Slide Archetypes)
 
-推荐使用已配置好的自动化构建脚本，稳定、零格式错位、完全符合母版：
+本技能的构建引擎已原生封装了 8 种最具表达力的高级版式，可直接在 JSON 大纲中通过 `type` 字段调用：
 
-#### 方式 A：编写 JSON 大纲并调用 `build_deck.py`（推荐首选）
-
-1. 在当前任务目录下输出结构化 JSON 文件（参考 `sample_outline.json`）：
-   ```json
-   {
-     "cover": {
-       "title": "项目汇报标题",
-       "subtitle": "副标题说明",
-       "copyright": "© 2026 合思信息 版权所有"
-     },
-     "agenda": ["章节一名称", "章节二名称", "章节三名称"],
-     "slides": [
-       {
-         "type": "transition",
-         "number": "01",
-         "title": "章节一名称"
-       },
-       {
-         "type": "cards",
-         "title": "页面核心标题",
-         "cards": [
-           {
-             "num": "01",
-             "title": "卡片标题",
-             "desc": "卡片说明正文",
-             "bullets": ["要点一", "要点二"]
-           }
-         ]
-       },
-       {
-         "type": "kpi",
-         "title": "核心成效与数据",
-         "metrics": [
-           { "value": "85%", "label": "指标名称", "desc": "指标细节说明" }
-         ],
-         "summary": "一句话成效总结"
-       }
-     ],
-     "include_closing": true
-   }
-   ```
-2. 运行构建脚本生成目标 PPT：
-   ```bash
-   python "C:\Users\朱益涛\.gemini\config\skills\hose-ppt\scripts\build_deck.py" --input outline.json --output "合思汇报方案.pptx"
-   ```
-
-#### 方式 B：直接用 Python / `python-pptx` 灵活扩充
-
-如果需要构建复杂表格、对比柱状图、架构图等特殊页面：
-1. 载入模板母版：
-   ```python
-   from pptx import Presentation
-   prs = Presentation(r"C:\Users\朱益涛\.gemini\config\skills\hose-ppt\resources\template.pptx")
-   # 使用 Layout 4 (标题与内容)
-   slide = prs.slides.add_slide(prs.slide_layouts[4])
-   ```
-2. 设置标题与白底容器，使用规范定义的品牌色与字体。
+| 版式类型 (`type`) | 典型应用场景 | 核心视觉组件与结构 |
+|---|---|---|
+| **`cards`** | 核心支柱、核心能力、三大痛点、四大特性 | 2/3/4 列圆角白卡，顶部左侧 48×48 图标徽章 + 右侧 `01.` 序号，中部主标与摘要，下部 `✔ ` 清单，底部业务场景胶囊标签。 |
+| **`compare`** | 现状痛点 vs 创新方案、Before vs After | 左右双栏鲜明对比卡（宽 5.6"），中间悬浮 `VS 升级` 胶囊；左侧浅红底 `⚠️ 传统痛点` 配 `✕ ` 列表，右侧浅蓝底 `✨ 敏捷方案` 配 `✔ ` 列表。 |
+| **`process`** | 项目实施四步法、业务流转全景、演进路径 | 3~5 步横向流转卡片，顶部 `PHASE 01` 实色胶囊，卡片间带有 `➔` 绿色连接箭头，底部带有 `📦 交付物` 标签。 |
+| **`kpi`** | 核心成效、业务看板、量化 ROI 亮点 | 3~4 个独立大数字看板（`46-60pt` 粗体），下方配指标名称与增长说明，底部配备全宽 `💡 核心成效` 综合总结栏。 |
+| **`stack`** | 技术架构全景、业务分层全景、数智中台 | 4 层纵向堆叠架构：左侧实色层级标牌（如 `04. 智慧展现与决策层`），右侧白底卡片内平铺 4~5 个能力组件胶囊。 |
+| **`split`** | 左右非对称叙事、战略洞见 + 落地动作 | 左侧 40% 宽度高对比度英雄卡（战略定位引言与核心洞见），右侧 60% 宽度 2~3 个横向落地的动作细分卡片。 |
+| **`case`** | 标杆客户证言、权威背书、实践验证 | 顶部大型引用框（大双引号 `“ ”` + CFO/高管权威引言），底部 3 个量化收益微卡片（如 `月结关账提前 3 天`）。 |
+| **`transition`** | 篇章章节过渡转场 | 极简微光卡片，居中巨幅 `01.` 标志性序号徽标 + 章节主标题。 |
 
 ---
 
-### 第 3 步：运行布局与间距自动质检 (Layout & Spacing QA)
+## 🎨 双模式与精选主题调色盘 (Dual Mode & Themes)
 
-运行质检脚本检测卡片高度、空白率与边距对称性：
-```bash
-python "C:\Users\朱益涛\.gemini\config\skills\hose-ppt\scripts\layout_qa.py" "输出文稿.pptx"
+通过 `--theme` 参数或 JSON 内 `"theme"` 字段自由切换：
+
+1. **`hosea` (合思官方企业模式 · 默认首选)**：
+   - 载入官方母版 `template.pptx`，带合思官方矢量 Logo 与中国服务网络封底；
+   - 主色：`#2455FF`（电光科技蓝）+ 点睛：`#34DE4C`（荧光生机绿）+ 沉稳文本：`#303B47` + 浅底：`#F7F7F7`。
+2. **`midnight` (午夜深蓝 · 高管述职与战略规划)**：
+   - 主色：`#1E2761`（海军蓝）+ 点缀：`#4F9DDE`（冰蓝）+ 底色：`#F8FAFC`。
+3. **`emerald` (翡翠生机 · ESG/供应链/绿色增长)**：
+   - 主色：`#107C41`（深绿）+ 点缀：`#34D399`（薄荷绿）+ 底色：`#F9FAF8`。
+4. **`purple` (前沿紫光 · AI大模型/算法前沿/数字创新)**：
+   - 主色：`#6D28D9`（科技紫）+ 点缀：`#A78BFA`（浅紫）+ 底色：`#FAF5FF`。
+
+---
+
+## 🛠️ 工具链与全自动执行工作流
+
+### 第 1 步：大纲结构化编写 (Outline Construction)
+在当前工作区输出结构化 JSON 文件（例如 `outline.json`），合理组合 8 大版式：
+
+```json
+{
+  "theme": "hosea",
+  "cover": {
+    "title": "新一代敏捷业财一体化方案",
+    "subtitle": "重构企业支出管理 · 让有限更有效",
+    "copyright": "© 2026 合思信息 版权所有"
+  },
+  "agenda": ["企业痛点与现状对比", "全场景方案与架构全景", "实施路径与客户成效"],
+  "slides": [
+    {
+      "type": "transition",
+      "number": "01",
+      "title": "企业痛点与现状对比"
+    },
+    {
+      "type": "compare",
+      "title": "传统费控报销模式 vs 合思敏捷业财模式",
+      "before": {
+        "title": "传统模式 / 现存痛点 (Before)",
+        "points": ["员工出差需频繁自行垫资，报销周期长达 14 天", "财务逐张人工验真贴票，月结关账超 5 天"]
+      },
+      "after": {
+        "title": "合思敏捷新模式 (After)",
+        "points": ["全场景因公消费对公结算，员工全流程免垫资免开票", "凭证全自动化率达 95% 以上，关账缩短至 24 小时"]
+      }
+    },
+    {
+      "type": "cards",
+      "title": "合思敏捷费控核心能力三大支柱",
+      "cards": [
+        {
+          "num": "01",
+          "icon": "receipt",
+          "title": "敏捷费控 · 全场景集采",
+          "desc": "打通企业商旅、用餐与用车，集中对公结算。",
+          "bullets": ["聚合主流商旅平台", "消费事前智能管控"],
+          "tag": "应用场景 · 因公商旅与对公集采"
+        }
+      ]
+    },
+    {
+      "type": "process",
+      "title": "敏捷业财标准化实施四步法",
+      "steps": [
+        { "title": "调研与蓝图", "bullets": ["组织与科目梳理", "审批流确认"], "output": "蓝图规划方案" },
+        { "title": "集成联调", "bullets": ["ERP 对接", "银企直联"], "output": "联调测试报告" }
+      ]
+    },
+    {
+      "type": "kpi",
+      "title": "某大型制造龙头集团上线实测成效",
+      "metrics": [
+        { "value": "85%", "label": "报销周期缩短", "desc": "压缩至24小时内" },
+        { "value": "95%+", "label": "凭证自动化率", "desc": "业务驱动自动入账" }
+      ],
+      "summary": "全面告别手工贴票报销时代，年均节约直接资金与协同工时成本数千万元。"
+    }
+  ],
+  "include_closing": true
+}
 ```
-质检重点指标：
-- [ ] **卡片内容填充率 (Content Fill Ratio)**：内容跨度须占卡片高度的 **70%~90%**，杜绝卡片下半截过度留白。
-- [ ] **间距对称性 (Margin Symmetry)**：左右边距差值不超过 0.2"，垂直方向居中呼吸感良好。
-- [ ] **视觉锚点 (Visual Anchors)**：卡片顶部配备品牌色矢量图标徽章（48×48）与 `01.` 序号，底部配备胶囊场景标签（Tag Pill）。
-- [ ] **字体一致性**：全篇 100% 统一为微软雅黑。
-- [ ] **封底完整性**：封底必须展示合思官方服务网络与联系渠道。
 
 ---
 
-## 示例触发场景
+### 第 2 步：一键执行构建 (Generate Deck)
+```bash
+python "C:\Users\朱益涛\.gemini\config\skills\hose-ppt\scripts\build_deck.py" --input outline.json --output "合思汇报方案.pptx" --theme hosea
+```
 
-- **用户**：“帮我根据这篇客户访谈，做一个合思风格的费控立项方案 PPT”
-  - **响应**：提取客户背景、核心痛点、合思敏捷费控解决方案、预期 ROI，生成合思母版标准 PPT。
-- **用户**：“我需要一份向高管汇报的财务数字化月度成果 PPT”
-  - **响应**：调用 KPI 模块与 3 卡片布局，突出核心成效大数字与业务亮点。
+---
+
+### 第 3 步：运行多维质量检验 (QA Verification)
+
+1. **布局与间距自动质检**：
+   ```bash
+   python "C:\Users\朱益涛\.gemini\config\skills\hose-ppt\scripts\layout_qa.py" "合思汇报方案.pptx"
+   ```
+   - 验证卡片内容填充率（`75% ~ 90%`）；
+   - 验证左右外边距水平对称性；
+   - 验证无大面积空洞留白。
+2. **高清多页视图质检**：
+   ```bash
+   python "C:\Users\朱益涛\.gemini\config\skills\hose-ppt\scripts\export_slides.py" "合思汇报方案.pptx" "slides_preview"
+   ```
+   - 通过 `read_file` 直接查看导出的单页 PNG，验证排版对齐、字体渲染与视觉质感。
