@@ -1,0 +1,26 @@
+{
+  "json": [
+    {
+      "dataLinkId": "ID01DEMO_ROW_001",
+      "dataLinkTemplateId": "ID01DEMO_TPL_001",
+      "dataLinkForm": {
+        "E_demo_entity_src_001_name": "示例甲方与示例乙方签订2026年度房屋租赁补充协议",
+        "E_demo_entity_src_001_合同编号": "HT-2026-00001",
+        "E_demo_entity_src_001_合同单据号": "DJ2600001",
+        "E_demo_entity_src_001_关联合同": {
+          "data": {
+            "plans": [],
+            "source": "CALCULATION",
+            "dataLink": {
+              "id": "ID01DEMO_CONTRACT_001",
+              "active": true,
+              "entityId": "demo_entity_tgt_001",
+              "E_demo_entity_tgt_001_code": "HT-2026-00001",
+              "E_demo_entity_tgt_001_关联主合同": [null]
+            }
+          }
+        }
+      }
+    }
+  ]
+}

@@ -11,6 +11,7 @@
 | 技能标识 (ID) | 核心功能简介 | 独立一键安装包 (Release 附件) | 源代码入口 |
 |---|---|---|---|
 | **`hose-ppt`** | 基于合思官方标准母版的 16:9 演示文稿自动化制作（微软雅黑统一规范、四层卡片自适应间距、内置 30+ 矢量图标服务、自动排版质检） | [⬇️ 下载 `hose-ppt.zip`](https://github.com/nanszyt/open-agent-skills/releases/download/latest/hose-ppt.zip) | [`SKILL.md`](./skills/hose-ppt/SKILL.md) |
+| **`hose-workflow-js-node`** | 合思费控工作流 JS 代码节点编写、数据结构解析（`dataLinkForm` / 金额 / 时间戳）、ES6 合规校验与零依赖 Node.js 本地沙盒仿真 | [⬇️ 下载 `hose-workflow-js-node.zip`](https://github.com/nanszyt/open-agent-skills/releases/download/latest/hose-workflow-js-node.zip) | [`SKILL.md`](./skills/hose-workflow-js-node/SKILL.md) |
 
 *(随着你向本仓库持续同步技能，GitHub Actions 会自动更新并挂载更多技能的独立下载包)*
 
